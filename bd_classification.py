@@ -43,22 +43,21 @@ cvSplits = list(skf.split(features, labelInfo))
 
 for i in range(len(cvSplits)):
 
-    train_val = cvSplits[i][0]
-    np.random.shuffle(train_val)
-    idx_train = train_val[:int(train_val.shape[0] * 0.7)]
-    idx_val = train_val[int(train_val.shape[0] * 0.7):]
-    idx_test = cvSplits[i][1]
-    print("---------", idx_train.shape, idx_val.shape, idx_test.shape)
-
     trainData = cvSplits[i][0]
     np.random.shuffle(trainData)
-    trainIdx = trainData[:int(trainData.shape[0])]
-    valIdx = trainData[int(trainData.shape[0]):]
+    trainIdx = trainData[:int(trainData.shape[0] * 0.7)] #? why multiply 0.7 here?
+    valIdx = trainData[int(trainData.shape[0] * 0.7):]
 
     testIdx = cvSplits[i][1]
 
     print("---------", trainIdx.shape, valIdx.shape, testIdx.shape)
 
+    featuresPCA = bd_functions.PCA_processing(features, trainIdx, 0.9)
+    allFeatureSelected = featuresPCA
+
+    # Train the model
+    adj_normalizd = bd_functions.final_adj_matrix_created(allFeatureSelected, graph)
+    
     pass
 
 pass
