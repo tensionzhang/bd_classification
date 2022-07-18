@@ -7,6 +7,8 @@ import scipy.sparse as sp
 from sklearn.model_selection import StratifiedKFold
 
 import bd_functions
+import bd_utils
+import bd_training
 
 # import data matrix
 dataFile = u'data/dynamic_features/Mean_dfc.mat'
@@ -14,9 +16,8 @@ data = sio.loadmat(dataFile, mat_dtype = True)['Mean_dfc']
 
 nSubject = np.size(data,1)
 nROI = np.size(data[0][0],1)
-nFeatures = int(nROI * (nROI-1) / 2)
 
-features = np.zeros((nSubject, nFeatures))
+features = np.zeros((nSubject, int(nROI * (nROI-1) / 2)))
 for i in range(nSubject):
     matlow = np.tril(data[0][i], -1)
     features[i] = matlow.ravel()[np.flatnonzero(matlow)]
@@ -58,6 +59,16 @@ for i in range(len(cvSplits)):
     # Train the model
     adj_normalizd = bd_functions.final_adj_matrix_created(allFeatureSelected, graph)
     
+    nFeatures = np.size(allFeatureSelected, 1)
+    featureSelected = torch.from_numpy(allFeatureSelected.astype(np.float32))
+    label = labelInfo.squeeze()
+    label = torch.from_numpy(label.astype(np.int64))
+
+    pred = bd_training.training() #TODO This line has not been finished
+    pred = pred.cpu().detach().numpy()
+
+    pred = np.array(torch.from_numpy(pred).max(1)[1])
+
     pass
 
 pass
