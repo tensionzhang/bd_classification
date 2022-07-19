@@ -35,10 +35,10 @@ genInfo = sio.loadmat(genFile, mat_dtype = True)['gender']
 eduFile = u'data/edu.mat'
 eduInfo = sio.loadmat(eduFile, mat_dtype = True)['edu']
 
-# create the graph
+# create the graph, an entry is 1 when age gender and education is similar for two subjects
 graph = bd_functions.create_graph(ageInfo, genInfo, eduInfo)
 
-# cross validation
+# cross validation, cvSplits contains groups of features and labels
 skf = StratifiedKFold(n_splits=10, shuffle=False) # change this shuffle to True
 cvSplits = list(skf.split(features, labelInfo))
 

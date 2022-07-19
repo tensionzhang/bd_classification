@@ -19,28 +19,29 @@ from scipy.spatial import distance
 import bd_utils
 
 def create_graph(age, gen, edu):
-    genGraph = np.zeros((len(gen), len(gen)))
-    for k in range(len(gen)):
-        for j in range(len(gen)):
-            if gen[k] == gen[j]:
-                genGraph[k, j] = 1
-                genGraph[j, k] = 1
-
     ageGraph = np.zeros((len(age), len(age)))
-    for k in range(len(age)):
+    ageDiffCriteria = 3
+    for i in range(len(age)):
         for j in range(len(age)):
-            val1 = abs(float(age[k]) - float(age[j]))
-            if val1 < 1:
-                ageGraph[k, j] = 1
-                ageGraph[j, k] = 1
+            ageDiff = abs(float(age[i]) - float(age[j]))
+            if ageDiff < ageDiffCriteria:
+                ageGraph[i, j] = 1
+                ageGraph[j, i] = 1
+
+    genGraph = np.zeros((len(gen), len(gen)))
+    for i in range(len(gen)):
+        for j in range(len(gen)):
+            if gen[i] == gen[j]:
+                genGraph[i, j] = 1
+                genGraph[j, i] = 1
 
     eduGraph = np.zeros((len(edu), len(edu)))
-    for k in range(len(edu)):
+    for i in range(len(edu)):
         for j in range(len(edu)):
-            val = abs(float(edu[k]) - float(edu[j]))
-            if val < np.std(edu):
-                eduGraph[k, j] = 1
-                eduGraph[j, k] = 1
+            eduDiff = abs(float(edu[i]) - float(edu[j]))
+            if eduDiff < np.std(edu):
+                eduGraph[i, j] = 1
+                eduGraph[j, i] = 1
 
     graph = genGraph * ageGraph * eduGraph
     return graph
@@ -53,15 +54,14 @@ def PCA_processing(features, trainIdx, nComponents):
 
 # Create adj matrix that contains graph info and non-graph info
 def final_adj_matrix_created(features_selected, graph):
-    distv = distance.pdist(features_selected, 'cityblock')
-    dist = distance.squareform(distv)
+    distv = distance.pdist(features_selected, 'cityblock') # Pairwise distances between observations in n-dimensional space.
+    dist = distance.squareform(distv) # Convert a vector-form distance vector to a square-form distance matrix, and vice-versa.
     sigma = np.mean(dist)
     sparseGraph = np.exp(- dist ** 2 / (2 * sigma ** 2))
     g = np.tril(sparseGraph, -1) + np.triu(sparseGraph, 1)
     g = g * graph
     adj_normalizd = bd_utils.preprocess_adj(g)
     return adj_normalizd
-
 
 
 
