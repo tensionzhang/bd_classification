@@ -24,7 +24,7 @@ def create_graph(age, gen, edu):
     for i in range(len(age)):
         for j in range(len(age)):
             ageDiff = abs(float(age[i]) - float(age[j]))
-            if ageDiff < ageDiffCriteria:
+            if ageDiff <= ageDiffCriteria:
                 ageGraph[i, j] = 1
                 ageGraph[j, i] = 1
 
