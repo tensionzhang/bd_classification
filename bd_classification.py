@@ -1,3 +1,7 @@
+"""
+This file is the main program of BD Classification
+"""
+
 import os.path
 import os
 import numpy as np
@@ -7,7 +11,6 @@ import scipy.sparse as sp
 from sklearn.model_selection import StratifiedKFold
 
 import bd_functions
-import bd_utils
 import bd_training
 
 # import data matrix

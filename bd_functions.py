@@ -1,3 +1,7 @@
+"""
+This file defines some functions that need to be used
+"""
+
 import numpy as np
 import torch
 from scipy import stats
@@ -16,7 +20,6 @@ from scipy.stats import pearsonr
 from sklearn.preprocessing import Normalizer
 from scipy.spatial import distance
 
-import bd_utils
 
 def create_graph(age, gen, edu):
     ageGraph = np.zeros((len(age), len(age)))
@@ -52,16 +55,51 @@ def PCA_processing(features, trainIdx, nComponents):
     xPCA = pca.transform(features)
     return xPCA
 
-# Create adj matrix that contains graph info and non-graph info
 def final_adj_matrix_created(features_selected, graph):
+    """Create adj matrix that contains graph info and non-graph info"""
     distv = distance.pdist(features_selected, 'cityblock') # Pairwise distances between observations in n-dimensional space.
     dist = distance.squareform(distv) # Convert a vector-form distance vector to a square-form distance matrix, and vice-versa.
     sigma = np.mean(dist)
     sparseGraph = np.exp(- dist ** 2 / (2 * sigma ** 2))
     g = np.tril(sparseGraph, -1) + np.triu(sparseGraph, 1)
     g = g * graph
-    adj_normalizd = bd_utils.preprocess_adj(g)
+    adj_normalizd = preprocess_adj(g)
     return adj_normalizd
+
+def preprocess_adj(adj):
+    adj_normalized = row_normalize_adj(adj + sp.eye(adj.shape[0])) # add self-loop and normalize
+    indices = torch.from_numpy(np.asarray([adj_normalized.row, adj_normalized.col]).astype(int)).long()
+    values = torch.from_numpy(adj_normalized.data.astype(np.float32))
+    adj_normalized = torch.sparse.FloatTensor(indices, values, (len(adj), len(adj)))
+    return adj_normalized
+
+def row_normalize_adj(adj):
+    rowsum = np.array(adj.sum(1))
+    rInv = np.power(rowsum, -1).flatten()
+    rInv[np.isinf(rInv)] = 0.
+    rInvDiag = sp.diags(rInv)
+    normAdj = rInvDiag.dot(adj)
+    return normAdj
+
+def sym_normalize_adj(adj):
+    """compute L=D^-0.5 * (A+I) * D^-0.5"""
+    adj += sp.eye(adj.shape[0])
+    degree = np.array(adj.sum(1))
+    dHat = sp.diags(np.power(degree, -0.5).flatten())
+    normAdj = dHat.dot(adj).dot(dHat)
+    return normAdj
+
+
+
+
+
+
+
+#### Not in use yet #################################################################################################
+def matrix_lower_triangle(data):
+    nROI = 164
+    nFeatures = nROI * (nROI-1) / 2
+    features = np.zeros((np.size(data,1), nFeatures))
 
 
 
