@@ -10,7 +10,7 @@ import scipy.io as sio
 import scipy.sparse as sp
 from sklearn.model_selection import StratifiedKFold
 
-import bd_functions
+import bd_utils
 import bd_training
 
 # import data matrix
@@ -38,8 +38,8 @@ genInfo = sio.loadmat(genFile, mat_dtype = True)['gender']
 eduFile = u'data/edu.mat'
 eduInfo = sio.loadmat(eduFile, mat_dtype = True)['edu']
 
-# create the graph, an entry is 1 when age gender and education is similar for two subjects
-graph = bd_functions.create_graph(ageInfo, genInfo, eduInfo)
+# create the non-image information graph, an entry is 1 when age, gender and education is similar for two subjects
+nonImgInfoGraph = bd_utils.create_graph(ageInfo, genInfo, eduInfo)
 
 # cross validation, cvSplits contains groups of features and labels
 skf = StratifiedKFold(n_splits=10, shuffle=False) # change this shuffle to True
@@ -56,18 +56,18 @@ for i in range(len(cvSplits)):
 
     print("---------", trainIdx.shape, valIdx.shape, testIdx.shape)
 
-    featuresPCA = bd_functions.PCA_processing(features, trainIdx, 0.9)
+    featuresPCA = bd_utils.PCA_processing(features, trainIdx, 0.9)
     allFeatureSelected = featuresPCA
 
     # Train the model
-    adj_normalizd = bd_functions.final_adj_matrix_created(allFeatureSelected, graph)
+    adj = bd_utils.create_adj(allFeatureSelected, nonImgInfoGraph) # merge feature information (image) and non-image information together
     
     nFeatures = np.size(allFeatureSelected, 1)
     featureSelected = torch.from_numpy(allFeatureSelected.astype(np.float32))
     label = labelInfo.squeeze()
     label = torch.from_numpy(label.astype(np.int64))
 
-    pred = bd_training.training() #TODO This line has not been finished
+    pred = bd_training.training(featureSelected, adj, label, trainIdx, valIdx, testIdx, nFeatures)
     pred = pred.cpu().detach().numpy()
 
     pred = np.array(torch.from_numpy(pred).max(1)[1])

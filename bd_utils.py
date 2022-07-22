@@ -20,7 +20,6 @@ from scipy.stats import pearsonr
 from sklearn.preprocessing import Normalizer
 from scipy.spatial import distance
 
-
 def create_graph(age, gen, edu):
     ageGraph = np.zeros((len(age), len(age)))
     ageDiffCriteria = 3
@@ -49,29 +48,32 @@ def create_graph(age, gen, edu):
     graph = genGraph * ageGraph * eduGraph
     return graph
 
-def PCA_processing(features, trainIdx, nComponents):
+def PCA_processing(fea, trainIdx, nComponents):
     pca = PCA(nComponents)
-    pca = pca.fit(features[trainIdx])
-    xPCA = pca.transform(features)
+    pca = pca.fit(fea[trainIdx])
+    xPCA = pca.transform(fea)
     return xPCA
 
-def final_adj_matrix_created(features_selected, graph):
-    """Create adj matrix that contains graph info and non-graph info"""
-    distv = distance.pdist(features_selected, 'cityblock') # Pairwise distances between observations in n-dimensional space.
+# Create adj matrix that contains graph info and non-graph info
+def create_adj(fea, graph):
+    distv = distance.pdist(fea, 'cityblock') # Pairwise distances between observations in n-dimensional space.
     dist = distance.squareform(distv) # Convert a vector-form distance vector to a square-form distance matrix, and vice-versa.
     sigma = np.mean(dist)
-    sparseGraph = np.exp(- dist ** 2 / (2 * sigma ** 2))
+    sparseGraph = np.exp(- dist ** 2 / (2 * sigma ** 2)) # Calculate the feature similarity
     g = np.tril(sparseGraph, -1) + np.triu(sparseGraph, 1)
     g = g * graph
     adj_normalizd = preprocess_adj(g)
     return adj_normalizd
 
 def preprocess_adj(adj):
-    adj_normalized = row_normalize_adj(adj + sp.eye(adj.shape[0])) # add self-loop and normalize
-    indices = torch.from_numpy(np.asarray([adj_normalized.row, adj_normalized.col]).astype(int)).long()
-    values = torch.from_numpy(adj_normalized.data.astype(np.float32))
-    adj_normalized = torch.sparse.FloatTensor(indices, values, (len(adj), len(adj)))
-    return adj_normalized
+    # normalizedAdj = row_normalize_adj(adj + sp.eye(adj.shape[0])) # add self-loop and normalize
+    normalizedAdj = sym_normalize_adj(adj)
+
+    # make it sparse
+    indices = torch.from_numpy(np.asarray([normalizedAdj.row, normalizedAdj.col]).astype(int)).long() 
+    values = torch.from_numpy(normalizedAdj.data.astype(np.float32))
+    normalizedAdjSp = torch.sparse.FloatTensor(indices, values, (len(adj), len(adj)))
+    return normalizedAdjSp
 
 def row_normalize_adj(adj):
     rowsum = np.array(adj.sum(1))
@@ -81,11 +83,11 @@ def row_normalize_adj(adj):
     normAdj = rInvDiag.dot(adj)
     return normAdj
 
+# compute L=D^-0.5 * (A+I) * D^-0.5
 def sym_normalize_adj(adj):
-    """compute L=D^-0.5 * (A+I) * D^-0.5"""
     adj += sp.eye(adj.shape[0])
-    degree = np.array(adj.sum(1))
-    dHat = sp.diags(np.power(degree, -0.5).flatten())
+    D = np.array(adj.sum(1))
+    dHat = sp.diags(np.power(D, -0.5).flatten())
     normAdj = dHat.dot(adj).dot(dHat)
     return normAdj
 

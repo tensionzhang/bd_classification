@@ -60,7 +60,7 @@ class TestOptions(BaseOptions):
 
 
 #TODO the main training loop function
-def training():
+def training(fea, adj, label, trainIdx, valIdx, testIdx, nFea):
 
     bestACC = 0
 
