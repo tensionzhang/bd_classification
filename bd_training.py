@@ -17,6 +17,8 @@ from scipy.spatial import distance
 from torch.autograd import Variable
 import argparse
 
+import bd_gcn
+
 class BaseOptions():
     def __init__(self):
         self.parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -29,8 +31,6 @@ class BaseOptions():
         self.parser.add_argument('--dropout', type=float, default=0.3, help='dropout')
         self.parser.add_argument('--weight_decay', type=float, default=1e-5, help='weight decay')
         self.parser.add_argument('--num_hops', type=int, default=3, help='num_hops')
-        self.parser.add_argument('--init_type', type=str, default='xavier', help='[uniform | xavier]')
-        self.parser.add_argument('--model', type=str, default='basic', help='[basic]')
 
     def parse(self):
         if not self.initialized:
@@ -56,13 +56,58 @@ class TrainOptions(BaseOptions):
 class TestOptions(BaseOptions):
     def initialize(self):
         BaseOptions.initialize(self)
-        self.isTrain = True
+        self.isTrain = False
 
 
 #TODO the main training loop function
 def training(fea, adj, label, trainIdx, valIdx, testIdx, nFea):
 
     bestACC = 0
+
+    trainIdx = torch.from_numpy(trainIdx.astype(np.int64))
+    valIdx = torch.from_numpy(valIdx.astype(np.int64))
+    testIdx = torch.from_numpy(testIdx.astype(np.int64))
+
+    opt = TrainOptions().parse()
+    useGPU = torch.cuda.is_available()
+
+    random.seed(1)
+    np.random.seed(1)
+    torch.manual_seed(1)
+    # if useGPU:
+    #     torch.cuda.manual_seed(1)
+
+    model, optimizer = None, None
+
+    print("| Constructing the GCN model...")
+    model = bd_gcn.GCN(
+        nFeatures = nFea,
+        nHidden = opt.num_hidden,
+        nClass = 2,
+        dropout = opt.dropout
+    )
+
+    if (opt.optimizer == 'sgd'):
+        optimizer = optim.SGD(
+            model.parameters(),
+            lr=opt.lr,
+            weight_decay=opt.weight_decay,
+            momentum=0.9
+        )
+    elif (opt.optimizer == 'adam'):
+        optimizer = optim.Adam(
+            model.parameters(),
+            lr=opt.lr,
+            weight_decay=opt.weight_decay
+        )
+    else:
+        raise NotImplementedError
+
+
+
+
+
+
 
     pass
 
