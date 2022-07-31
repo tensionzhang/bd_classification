@@ -103,7 +103,11 @@ def matrix_lower_triangle(data):
     nFeatures = nROI * (nROI-1) / 2
     features = np.zeros((np.size(data,1), nFeatures))
 
-
+def encode_onehot(labels):
+    classes = set(labels)
+    classesDict = {c: np.identity(len(classes))[i, :] for i, c in enumerate(classes)}
+    labelsOnehot = np.array(list(map(classesDict.get, labels)), dtype=np.int32)
+    return labelsOnehot
 
 
 

@@ -2,13 +2,14 @@
 This file is the main program of BD Classification
 """
 
-import os.path
-import os
 import numpy as np
 import torch
 import scipy.io as sio
 import scipy.sparse as sp
 from sklearn.model_selection import StratifiedKFold
+
+import os
+import os.path
 
 import bd_utils
 import bd_training
@@ -51,7 +52,6 @@ for i in range(len(cvSplits)):
     np.random.shuffle(trainData)
     trainIdx = trainData[:int(trainData.shape[0] * 0.7)] #? why multiply 0.7 here?
     valIdx = trainData[int(trainData.shape[0] * 0.7):]
-
     testIdx = cvSplits[i][1]
 
     print("---------", trainIdx.shape, valIdx.shape, testIdx.shape)

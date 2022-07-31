@@ -4,6 +4,6 @@ This project is for Bipolar Disorder Classificaiton using GCN
 
 It's still in progress
 
-Written by Ms. DU Mengjiao and Dr. ZHANG Li
+Written by Dr. ZHANG Li and Ms. DU Mengjiao
 
-Last Update: 25-JUL-2022
+Last Update: 31-JUL-2022

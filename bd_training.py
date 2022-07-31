@@ -46,7 +46,6 @@ class TrainOptions(BaseOptions):
     def initialize(self):
         BaseOptions.initialize(self)
         self.parser.add_argument('--lr', type=float, default=0.002, help='initial learning rate')
-        self.parser.add_argument('--optimizer', type=str, default='adam', help='[sgd | adam]')
         self.parser.add_argument('--epoch', type=int, default=500, help='number of training epochs')
         self.parser.add_argument('--lr_decay_epoch', type=int, default=5000, help='multiply by a gamma every set iter')
         self.parser.add_argument('--nb_heads', type=int, default=16, help='number of head attentions')
@@ -77,32 +76,11 @@ def training(fea, adj, label, trainIdx, valIdx, testIdx, nFea):
     # if useGPU:
     #     torch.cuda.manual_seed(1)
 
-    model, optimizer = None, None
-
     print("| Constructing the GCN model...")
-    model = bd_gcn.GCN(
-        nFeatures = nFea,
-        nHidden = opt.num_hidden,
-        nClass = 2,
-        dropout = opt.dropout
-    )
+    model = bd_gcn.GCN(nFeatures = nFea, nHidden = opt.num_hidden, nClass = 2, dropout = opt.dropout)
+    optimizer = optim.Adam(model.parameters(), lr=opt.lr, weight_decay=opt.weight_decay)
 
-    if (opt.optimizer == 'sgd'):
-        optimizer = optim.SGD(
-            model.parameters(),
-            lr=opt.lr,
-            weight_decay=opt.weight_decay,
-            momentum=0.9
-        )
-    elif (opt.optimizer == 'adam'):
-        optimizer = optim.Adam(
-            model.parameters(),
-            lr=opt.lr,
-            weight_decay=opt.weight_decay
-        )
-    else:
-        raise NotImplementedError
-
+    
 
 
 
